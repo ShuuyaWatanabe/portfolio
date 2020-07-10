@@ -1,0 +1,38 @@
+body{
+        background-color:white;
+        width:700px;
+        margin-right: auto;
+        margin-left : auto;
+}
+
+h1{
+    border-bottom: dashed 3px black;
+    border-top:dashed 3px black;
+    text-align: center;
+    background-color: aliceblue;
+}
+
+.tank{
+
+}
+
+.tank_tool{
+    display: inline-block;
+}
+.tank_point{
+
+}
+
+.diamond{
+
+}
+
+.title{
+    text-align: center;
+    border-bottom: double 5px green;
+    border-top: double 5px green ;
+}
+pre{
+    color: white;
+    background-color: darkslategray;
+}
