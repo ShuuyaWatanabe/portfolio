@@ -12,22 +12,26 @@ h1{
     background-color: aliceblue;
 }
 
-.tank{
+.prof img{
+    float: left;
+    width: 25%;
+    height: 25%;
+}
 
+.under_reset{
+    clear: both;
+}
+
+.prof p{
+    line-height:50%;
 }
 
 .tank_tool{
     display: inline-block;
 }
-.tank_point{
-
-}
-
-.diamond{
-
-}
 
 .title{
+    background-color: lightblue;
     text-align: center;
     border-bottom: double 5px green;
     border-top: double 5px green ;
