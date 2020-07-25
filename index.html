@@ -7,189 +7,237 @@
     </head>
 
     <body>
-        <h1>PORTFOLIO</h1>
-        <h2>contents</h2>
-
-        <ul>
-            <li><a href="#tank">戦車(animation MAYA)</a></li>
-            <li><a href="#diamond">宝石風シェーダー＋パーティクル(shader&particle unity)</a></li>
-            <li><a href="#tetris">テトリス in MAYA(MAYA-python, Qtdesigner)</a></li>
-        </ul>
-
-        <div class="tank">
-            <a id="tank"></a>
-            <h2 class="title">戦車</h2>
-            <img src="tank.png"
-                 alt="tank_img"
-                 width="50%"
-                 height="50%">
-                 <iframe width="560" height="315" src="https://www.youtube.com/embed/nAcYpABvYhw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            <div class="tool">
-                <h3>使用ツール</h3>
-                <ul>
-                    <li>MAYA-Expression</li>
-                    <li>MAYA-MASH</li>
-                </ul>
-            </div>
-            <div class="point">
-                <h3>POINT</h3>
-                <p>履帯の形をカーブで制御しているので、CVを動かすことで地面に添わせた。</p>
-            </div>
-                <h4>Expression ソース</h4>
-                <pre><code>
-global proc L_Track()
-{
-	int $i;
-	string $vert;
-	float $check_vert[], $target_cv[], $new_y, $min_dis, $new_dis;
-
-	string $ground[] = `ls -fl "ground.vtx[*]"`; //地面頂点リスト
-
-	//カーブのCV
-	for($i=11; $i<22; $i++)
-	{
-		$min_dis = 10.0;
-		$target_cv = `pointPosition -w nurbsCircle1.cv[$i]`;	
-
-		//cv
-		for($vert in $ground)
-		{
-			$check_vert = `pointPosition $vert`;
-            $new_dis = sqrt(($check_vert[0] - $target_cv[0])*($check_vert[0] - $target_cv[0]) 
-                            + ($check_vert[2] - $target_cv[2])*($check_vert[2] - $target_cv[2]));
-			if($min_dis > $new_dis)
-			{
-				$min_dis = $new_dis;
-				$new_y = $check_vert[1];
-			}
-		}
-		//cv移動
-		select -r nurbsCircle1.cv[$i];
-		move -y $new_y;
-	}
-}
-L_Track();
-                </code></pre> 
-        </div>
-
-        <div class="diamond">
-            <a id="diamond"></a>
-            <h2 class="title">宝石風シェーダー＋パーティクル</h2>
-            <img src="diamond.JPG"
-                 alt="dia_img"
-                 width="50%"
-                 height="50%">
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/cxJQD-eMZQY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            <div class="tool">
-                <h3>使用ツール</h3>
-                <ul>
-                    <li>Unity-shaderscript</li>
-                    <li>Unity-VFX Graph</li>
-                </ul>
-            </div>
-            <div class="point">
-                <h3>POINT</h3>
-                <p>履帯が地面に添うようにアニメーションさせた。</p>
-            </div>
-            <pre><code>
-Shader "Custom/shader"
-{
-    Properties
-    {
-        _BaseColor ("BaseColor", Color) = (1,1,1,1)
-        _MainTex ("Albedo (RGB)", 2D) = "white" {}
-        _Glossiness ("Smoothness", Range(0,1)) = 0.5
-        _Metallic ("Metallic", Range(0,1)) = 0.0
-        _Alphaset("alpha", Range(0,10)) = 1.0
-
-        //add RGB ratio
-        _Red("red", Range(0,1)) = 0.5
-        _Blue("blue", Range(0,1)) = 0.5
-        _Green("green", Range(0,1)) = 0.5
-        
-        _Emission("Emission", Range(0,1)) = 0.5
-    }
-    SubShader
-    {
-        Tags {
-            "Queue"="Transparent"
-            "RenderType"="Transparent" 
-        }
-        LOD 200
-
-        Cull Back
-
-        CGPROGRAM
-        #pragma surface surf Standard alpha:fade
-        #pragma target 3.0
-
-        sampler2D _MainTex;
-
-        struct Input
-        {
-            float2 uv_MainTex;
-            float3 viewDir, worldNormal;
-        };
-
-        half _Glossiness;
-        half _Metallic;
-        half _Alpha;
-        fixed _Red, _Blue, _Green;
-        half _Emission;
-        half _Alphaset;
-        fixed4 _BaseColor;
-        
-        //度→rad
-        float ang2rad(float ang){
-                float rad = ang * 2 * 3.1415 / 360;
-                return rad;
-            }
-
-        UNITY_INSTANCING_BUFFER_START(Props)
-        
-        UNITY_INSTANCING_BUFFER_END(Props)
-
-        void surf (Input IN, inout SurfaceOutputStandard o)
-        {
-            //視線とフェース法線の内積 = cos theta
-            float angle = acos(dot(IN.viewDir, IN.worldNormal));
-
-            //角度でいい感じに色を加算
-            if(angle <= ang2rad(30.0f)){
-                _BaseColor = _BaseColor + fixed4(_Red, _Green, 0, 1);
-            }else if(angle < ang2rad(60.0f)){
-                _BaseColor = _BaseColor + fixed4(_Red, 0, _Blue, 1);
-            }else if(angle < ang2rad(90.0f)){
-                _BaseColor = _BaseColor + fixed4(_Red, 0, 0, 1);
-            }else if(angle < ang2rad(120.0f)){
-                _BaseColor = _BaseColor + fixed4(0, _Green, _Blue, 1);
-            }else if(angle < ang2rad(150.0)){
-                _BaseColor = _BaseColor + fixed4(0, _Green, 0, 1);
-            }else if(angle <= ang2rad(180.0)){
-                _BaseColor = _BaseColor + fixed4(0, 0, _Blue, 1);
-            }
-
-            o.Albedo = _BaseColor.rgb;
-
-            //水平に近いほどalphaを小さく
-            _Alpha = _Alphaset * (abs(sin(angle)) + 0.01);
+        <div class="prof">
+            <h1>プロフィール(2020/07現在)</h1>
+            <img src="face.png">
+            <h2><a href="#portfolio">go to portfolio</a></h2>
+            <h2 class="name">名前：渡邉秀哉</h2>
             
-            o.Alpha = _Alpha;
-            o.Metallic = _Metallic;
-            o.Smoothness = _Glossiness;
-            o.Emission = _Emission;
-        }
-        ENDCG
-    }
-    FallBack "Diffuse"
-}
-            </code></pre>
+            <div class="under_reset"></div>
+
+            <h2 class="hoge">学歴</h2>
+            <p>2013年4月：電気通信大学・情報理工学部・知能機械工学科　入学</p>
+            <p>2019年3月：電気通信大学・情報理工学部・知能機械工学科　退学</p>
+            <p>2019年4月：日本電子専門学校・コンピュータグラフィックス科　入学</p>
+            <p>2021年3月：日本電子専門学校・コンピュータグラフィックス科　卒業予定</p>
+            
+            <h2>資格</h2>
+            <p>2019年11月：基本情報技術者試験　合格</p>
+            <p>2019年12月：CGクリエイター検定ベーシック　合格</p>
+            <p>2020年02月：ビジネス能力検定ジョブパス3級　合格</p>
+            
+            <h2>使用ツール・言語(ツール：使用歴　習熟度)</h2>
+            <p>C言語：1年　mallocによるメモリ動的確保やファイル操作、数値計算程度</p>
+            <p>C#：半年　Unityスクリプトのみ</p>
+            <p>Python：3か月　MAYAのツール作成</p>
+            <p>mel：半年　単純操作の繰り返しのスクリプト</p>
+            <p>HTML：1週間　このページを作るために急いで学習中</p>
+            <br>
+            <p>MAYA：1年半　モデリングからレンダリングまでの一連作業</p>
         </div>
 
-        <div class="tetris">
-            <a id="tetris"></a>
-            <h2 class="title">TETRIS in MAYA</h2>
+        <div>
+            <a id="portfolio"></a>
+            <h1>Portfolio</h1>
+            <h2>contents</h2>
 
+            <ul>
+                <li><a href="#tank">戦車(animation MAYA)</a></li>
+                <li><a href="#tetris">テトリス in MAYA(MAYA-python, Qtdesigner)</a></li>
+                <li><a href="#diamond">宝石風シェーダー＋パーティクル(shader&particle unity)</a></li>
+                
+            </ul>
+
+            <div class="tank">
+                <a id="tank"></a>
+                <h2 class="title">戦車</h2>
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/E94hw2WlYBc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <div class="tool">
+                    <h3>使用ツール</h3>
+                    <ul>
+                        <li>MAYA2019(Expression,MASH)</li>
+                    </ul>
+                </div>
+                <div class="point">
+                    <h3>POINT</h3>
+                    <p>履帯をカーブで成形しているので、CVを動かすことで地面に添わせた。
+                        地面の頂点座標を取得し、毎フレームCVをx-z平面上で一番近い地面の頂点と同じy座標に移動させることで接地させている。</p>
+                    <p>車体の傾きは、左右と前後の車輪の上昇量から計算している。</p>
+                </div>
+                    <h4>Expression ソース</h4>
+                    <pre><code>
+    global proc L_Track()
+    {
+        int $i;
+        string $vert;
+        float $check_vert[], $target_cv[], $new_y, $min_dis, $new_dis;
+
+        string $ground[] = `ls -fl "ground.vtx[*]"`; //地面頂点リスト
+
+        //カーブのCV
+        for($i=11; $i<22; $i++)
+        {
+            $min_dis = 10.0;
+            $target_cv = `pointPosition -w nurbsCircle1.cv[$i]`;	
+
+            //cv
+            for($vert in $ground)
+            {
+                $check_vert = `pointPosition $vert`;
+                $new_dis = sqrt(($check_vert[0] - $target_cv[0])*($check_vert[0] - $target_cv[0]) 
+                                + ($check_vert[2] - $target_cv[2])*($check_vert[2] - $target_cv[2]));
+                if($min_dis > $new_dis)
+                {
+                    $min_dis = $new_dis;
+                    $new_y = $check_vert[1];
+                }
+            }
+            //cv移動
+            select -r nurbsCircle1.cv[$i];
+            move -y $new_y;
+        }
+    }
+    L_Track();
+                    </code></pre> 
+            </div>
+            
+            <div class="tetris">
+                <a id="tetris"></a>
+                <h2 class="title">TETRIS in MAYA</h2>
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/eeIA_kiShYU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <h3>使用ツール</h3>
+                <ul>
+                    <li>Python(メイン)</li>
+                    <li>QtDesigner(コントローラーUI)</li>
+                </ul>
+                <h3>POINT</h3>
+                <p>Pythonの学習のためMAYAでTetrisを作成した。
+                    Pythonの基本文法とQtDesignerで作成したUIを読み込むところを学習できた。
+                    今後はUI付きの自作ツールを作っていきたい。</p>
+                <h3>処理</h3>
+                <ol type="1">
+                    <li>各マスにロケーターを生成(非表示)し、キューブの有無の情報を格納するアトリビュート(bool)を追加</li>
+                    <li>ミノを1マスずつ下げていき、ブロックに当たったら(移動先のロケーターのアトリビュートがTrue)停止</li>
+                    <li>各列のロケーターのアトリビュートを見て全てTrueならキューブを削除しアトリビュートをFalseに</li>
+                    <li>ループ</li>
+                </ol>
+            </div>
+
+            <div class="diamond">
+                <a id="diamond"></a>
+                <h2 class="title">宝石風シェーダー＋パーティクル</h2>
+                <img src="diamond.JPG"
+                    alt="dia_img"
+                    width="50%"
+                    height="50%">
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/cxJQD-eMZQY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <div class="tool">
+                    <h3>使用ツール</h3>
+                    <ul>
+                        <li>Unity-shaderscript</li>
+                        <li>Unity-VFX Graph</li>
+                    </ul>
+                </div>
+                <div class="point">
+                    <h3>POINT</h3>
+                    <p>履帯が地面に添うようにアニメーションさせた。</p>
+                </div>
+                <pre><code>
+    Shader "Custom/shader"
+    {
+        Properties
+        {
+            _BaseColor ("BaseColor", Color) = (1,1,1,1)
+            _MainTex ("Albedo (RGB)", 2D) = "white" {}
+            _Glossiness ("Smoothness", Range(0,1)) = 0.5
+            _Metallic ("Metallic", Range(0,1)) = 0.0
+            _Alphaset("alpha", Range(0,10)) = 1.0
+
+            //add RGB ratio
+            _Red("red", Range(0,1)) = 0.5
+            _Blue("blue", Range(0,1)) = 0.5
+            _Green("green", Range(0,1)) = 0.5
+            
+            _Emission("Emission", Range(0,1)) = 0.5
+        }
+        SubShader
+        {
+            Tags {
+                "Queue"="Transparent"
+                "RenderType"="Transparent" 
+            }
+            LOD 200
+
+            Cull Back
+
+            CGPROGRAM
+            #pragma surface surf Standard alpha:fade
+            #pragma target 3.0
+
+            sampler2D _MainTex;
+
+            struct Input
+            {
+                float2 uv_MainTex;
+                float3 viewDir, worldNormal;
+            };
+
+            half _Glossiness;
+            half _Metallic;
+            half _Alpha;
+            fixed _Red, _Blue, _Green;
+            half _Emission;
+            half _Alphaset;
+            fixed4 _BaseColor;
+            
+            //度→rad
+            float ang2rad(float ang){
+                    float rad = ang * 2 * 3.1415 / 360;
+                    return rad;
+                }
+
+            UNITY_INSTANCING_BUFFER_START(Props)
+            
+            UNITY_INSTANCING_BUFFER_END(Props)
+
+            void surf (Input IN, inout SurfaceOutputStandard o)
+            {
+                //視線とフェース法線の内積 = cos theta
+                float angle = acos(dot(IN.viewDir, IN.worldNormal));
+
+                //角度でいい感じに色を加算
+                if(angle <= ang2rad(30.0f)){
+                    _BaseColor = _BaseColor + fixed4(_Red, _Green, 0, 1);
+                }else if(angle < ang2rad(60.0f)){
+                    _BaseColor = _BaseColor + fixed4(_Red, 0, _Blue, 1);
+                }else if(angle < ang2rad(90.0f)){
+                    _BaseColor = _BaseColor + fixed4(_Red, 0, 0, 1);
+                }else if(angle < ang2rad(120.0f)){
+                    _BaseColor = _BaseColor + fixed4(0, _Green, _Blue, 1);
+                }else if(angle < ang2rad(150.0)){
+                    _BaseColor = _BaseColor + fixed4(0, _Green, 0, 1);
+                }else if(angle <= ang2rad(180.0)){
+                    _BaseColor = _BaseColor + fixed4(0, 0, _Blue, 1);
+                }
+
+                o.Albedo = _BaseColor.rgb;
+
+                //水平に近いほどalphaを小さく
+                _Alpha = _Alphaset * (abs(sin(angle)) + 0.01);
+                
+                o.Alpha = _Alpha;
+                o.Metallic = _Metallic;
+                o.Smoothness = _Glossiness;
+                o.Emission = _Emission;
+            }
+            ENDCG
+        }
+        FallBack "Diffuse"
+    }
+                </code></pre>
+            </div>
+
+            
         </div>
     </body>
 </html>
