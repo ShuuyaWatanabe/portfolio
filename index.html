@@ -11,7 +11,8 @@
             <h1>プロフィール(2020/07現在)</h1>
             <img src="face.png">
             <h2><a href="#portfolio">go to portfolio</a></h2>
-            <h2 class="name">名前：渡邉秀哉</h2>
+            <h2>名前：渡邉秀哉</h2>
+            <h2>志望職種：CGプログラマ・テクニカルアーティスト</h2>
             
             <div class="under_reset"></div>
 
@@ -44,7 +45,9 @@
             <ul>
                 <li><a href="#tank">戦車(animation MAYA)</a></li>
                 <li><a href="#tetris">テトリス in MAYA(MAYA-python, Qtdesigner)</a></li>
+                <li><a href="#gear_mel">歯車生成MEL(MEL)</a></li>
                 <li><a href="#diamond">宝石風シェーダー＋パーティクル(shader&particle unity)</a></li>
+                <li><a href="#gun">銃モデリング(MAYA, Substance Painter)</a></li>
                 
             </ul>
 
@@ -123,6 +126,66 @@
                 </ol>
             </div>
 
+            <div class="gear_mel">
+                <a id="gear_mel"></a>
+                <h2 class="title">歯車生成MEL</h2>
+                <img src="gear.JPG">
+                <h3>使用ツール</h3>
+                <ul>
+                    <li>MEL</li>
+                </ul>
+                <h3>POINT</h3>
+                <p>モジュールと歯数を入れ歯車を作成するMELスクリプトを作成した。入力した値が後から分かるようにリネームするようにした。</p>
+                <h3>ソースコード</h3>
+                <pre><code>
+proc create_gear(float $m,int $z)
+{
+	//m = モジュール、同じならかみ合います
+	//z = 歯数
+	
+	//ポリゴン化と厚みは手動でどうぞ
+
+	int $i,$j,$k,$l, $r = $m * $z / 2, $cv = $z * 8;
+	float $mm = $m * -1.25;
+	float $bag;
+	string $obj[];
+	string $name[], $rename;
+	
+	$obj = `circle -c 0 0 0 -nr 0 1 0 -sw 360 -r $r -d 3 -s $cv -ch 1 -n "gear"`;
+	for($i=0; $i<$z; $i++)
+	{
+		$j = $i * 8;
+		$k = $j + 1;
+		$l = $j + 2;
+		
+		select -r $obj;
+		select -r $obj.cv[$j];
+		select -add $obj.cv[$k];
+		select -add $obj.cv[$l];
+		select -d $obj;
+		
+		move -r -cs -ls $m 0 0;
+		
+		$j = $i * 8 + 4;
+		$k = $j + 1;
+		$l = $j + 2;
+		
+		select -r $obj;
+		select -r $obj.cv[$j];
+		select -add $obj.cv[$k];
+		select -add $obj.cv[$l];
+		select -d $obj;
+		
+		move -r -cs -ls $mm 0 0;
+	}
+	$name = `planarSrf -ch 1 -d 3 -ko 0 -tol 0.01 -rn 0 -po 0 $obj`;
+	$rename = "gear" + "_" + string($m) + "_" + string($z);
+	rename $name[0] $rename;
+	DeleteHistory;
+}
+                </code></pre>
+            </div>
+
             <div class="diamond">
                 <a id="diamond"></a>
                 <h2 class="title">宝石風シェーダー＋パーティクル</h2>
@@ -140,8 +203,10 @@
                 </div>
                 <div class="point">
                     <h3>POINT</h3>
-                    <p>履帯が地面に添うようにアニメーションさせた。</p>
+                    <p>表面と視線との角度によって透明度を変え、元の色にRGBを追加することで宝石のような質感を表現しようとした。</p>
+                    <p>反射率も変え屈折も表現すれば良くなる気がした。</p>
                 </div>
+                <h3>ソースコード</h3>
                 <pre><code>
     Shader "Custom/shader"
     {
@@ -235,6 +300,27 @@
         FallBack "Diffuse"
     }
                 </code></pre>
+            </div>
+
+            <div class="gun">
+                <a id="gun"></a>
+                <h2 class="title">銃モデリング</h2>
+                <img src="FN_FiveseveN.png">
+                <img src="gun_wire.JPG">
+                <h3>制作時間：約20時間</h3>
+                <h3>ポリゴン数：9000三角ポリゴン</h3>
+                
+
+                <div class="under_reset"></div>
+
+                <h3>使用ツール</h3>
+                <ul>
+                    <li>MAYA2019</li>
+                    <li>Substance Painter</li>
+                </ul>
+                <h3>POINT</h3>
+                <p>FN社、Five-seveNをモデリングした。他の拳銃よりも曲線が多く、きれいになるよう気を付けた。
+                    公式ページに360度画像があったのでよく観察しながら作業をした。</p>
             </div>
 
             
