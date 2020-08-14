@@ -8,7 +8,7 @@
 
     <body>
         <div class="prof">
-            <h1>プロフィール(2020/07現在)</h1>
+            <h1>プロフィール(2020/08現在)</h1>
             <img src="face.png">
             <h2><a href="#portfolio">go to portfolio</a></h2>
             <h2>名前：渡邉秀哉</h2>
@@ -28,11 +28,11 @@
             <p>2020年02月：ビジネス能力検定ジョブパス3級　合格</p>
             
             <h2>使用ツール・言語(ツール：使用歴　習熟度)</h2>
-            <p>C言語：1年　mallocによるメモリ動的確保やファイル操作、数値計算程度</p>
-            <p>C#：半年　Unityスクリプトのみ</p>
+            <p>C言語：1年　メモリ動的確保やファイル操作、数値計算程度</p>
+            <p>C#：半年　Unityスクリプト</p>
             <p>Python：3か月　MAYAのツール作成</p>
-            <p>mel：半年　単純操作の繰り返しのスクリプト</p>
-            <p>HTML：1週間　このページを作るために急いで学習中</p>
+            <p>mel：半年　スクリプト作成</p>
+            <p>HTML：1か月　このページを作るために急いで学習中</p>
             <br>
             <p>MAYA：1年半　モデリングからレンダリングまでの一連作業</p>
         </div>
@@ -45,6 +45,7 @@
             <ul>
                 <li><a href="#tank">戦車(animation MAYA)</a></li>
                 <li><a href="#tetris">テトリス in MAYA(MAYA-python, Qtdesigner)</a></li>
+                <li><a href="#tools">MAYA便利ツール(Python, QtDesigner)</a>
                 <li><a href="#gear_mel">歯車生成MEL(MEL)</a></li>
                 <li><a href="#diamond">宝石風シェーダー＋パーティクル(shader&particle unity)</a></li>
                 <li><a href="#gun">銃モデリング(MAYA, Substance Painter)</a></li>
@@ -58,7 +59,7 @@
                 <div class="tool">
                     <h3>使用ツール</h3>
                     <ul>
-                        <li>MAYA2019(Expression,MASH)</li>
+                        <li>MAYA2019(MEL,Expression,MASH)</li>
                     </ul>
                 </div>
                 <div class="point">
@@ -67,8 +68,10 @@
                         地面の頂点座標を取得し、毎フレームCVをx-z平面上で一番近い地面の頂点と同じy座標に移動させることで接地させている。</p>
                     <p>車体の傾きは、左右と前後の車輪の上昇量から計算している。</p>
                 </div>
-                    <h4>Expression ソース</h4>
-                    <pre><code>
+                    <h4>ソース</h4>
+                    <details>
+                    <summary>履帯制御MEL</summary>
+                        <pre><code>
     global proc L_Track()
     {
         int $i;
@@ -101,7 +104,29 @@
         }
     }
     L_Track();
-                    </code></pre> 
+                        </code></pre>
+                    </details>
+                    <details>
+                    <summary>車体制御Expression</summary>
+                        <pre><code>
+    //車体の左右の傾き制御
+    //左右の車輪の上昇量から計算
+    body.rotateX += (((R_road01.translateY + R_road02.translateY 
+        + R_road03.translateY + R_road04.translateY + R_road05.translateY) 
+        - (L_road01.translateY + L_road02.translateY + L_road03.translateY 
+        + L_road04.translateY + L_road05.translateY))-body.rotateX)*0.6;
+    
+    //前後の傾き制御
+    body.rotateZ += (((R_road04.translateY + R_road05.translateY 
+        + L_road04.translateY + L_road05.translateY)*2 
+        - (R_road01.translateY + R_road02.translateY 
+        + L_road01.translateY + L_road04.translateY)*2)-body.rotateZ)*0.6;
+    
+    //履帯のコントローラを車体に合わせる
+    nurbsCircle1.rotateX = -body.rotateX;
+    nurbsCircle2.rotateX = -body.rotateX;
+                        </code></pre>
+                    </details>
             </div>
             
             <div class="tetris">
@@ -124,6 +149,312 @@
                     <li>各列のロケーターのアトリビュートを見て全てTrueならキューブを削除しアトリビュートをFalseに</li>
                     <li>ループ</li>
                 </ol>
+                <details><summary>メインソース</summary>
+                <pre><code>
+    import sys
+    import os
+    import maya.cmds as cmds
+
+    from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+
+    from PySide2 import QtCore, QtGui, QtWidgets
+    from PySide2.QtUiTools import QUiLoader
+
+    import tet_check
+    import tet_mino
+
+    UI_DIR = "***"
+
+    flag = 1
+
+    class GUI(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
+        def __init__(self, parent=None):
+            super(GUI, self).__init__(parent)
+            
+            #ui load
+            loader = QUiLoader()
+            uiFilePath = os.path.join(UI_DIR, 'tet_con.ui')
+            self.UI = loader.load(uiFilePath)
+            self.setCentralWidget(self.UI)
+
+            #title
+            self.setWindowTitle(u'controler')
+
+            self.UI.clockwise.clicked.connect(self.rotate_clock)
+            self.UI.anticlockwise.clicked.connect(self.rotate_anticlock)
+            self.UI.left.clicked.connect(self.move_left)
+            self.UI.right.clicked.connect(self.move_right)
+            self.UI.go.clicked.connect(self.start)
+            self.UI.next.clicked.connect(self.apply)
+
+        def rotate_clock(self):
+            rz = cmds.getAttr('move.rz')
+            cmds.rotate(0, 0, rz-90, 'move')
+            tet_check.check_out()
+
+        def rotate_anticlock(self):
+            rz = cmds.getAttr('move.rz')
+            cmds.rotate(0, 0, rz+90, 'move')
+            tet_check.check_out()
+
+        def move_left(self):
+            x = cmds.getAttr('move.tx')
+            y = cmds.getAttr('move.ty')
+            cmds.move(x-1, y, 0, 'move')
+            tet_check.check_out()
+
+        def move_right(self):
+            x = cmds.getAttr('move.tx')
+            y = cmds.getAttr('move.ty')
+            cmds.move(x+1, y, 0, 'move')
+            tet_check.check_out()
+
+        def start(self):
+            global flag
+            if flag == 1:
+                for i in range(21):
+                    cmds.move(-1, 'move', y=True, r=True)
+                    cmds.select('move', hi=True)
+                    cmds.select('move', d =True)
+                    obj_list = cmds.ls(sl=True, type='transform')
+                    cmds.select('exist*')
+                    tag_list = cmds.ls(sl=True, type='transform')
+                    for obj in obj_list:
+                        obj_pos = cmds.pointPosition(obj + '.rotatePivot', w=True)
+                        for tag in tag_list:
+                            tag_pos = cmds.pointPosition(tag, w=True)
+                            if abs(obj_pos[1] - tag_pos[1]) < 0.5:
+                                if abs(obj_pos[0] - tag_pos[0]) < 0.5:
+                                    if cmds.getAttr(tag + '.exist') == 1:
+                                        cmds.move(1, 'move', y=True, r=True)
+                                        for obj2 in obj_list:
+                                            obj2_pos = cmds.pointPosition(obj2 + '.rotatePivot', w=True)
+                                            print('xxxxx')
+                                            print(int(obj2_pos[1]))
+                                            line_name = 'line' + str(int(obj2_pos[1]))
+                                            cmds.parent(obj2, line_name)
+                                        cmds.rotate(0, 0, 0, 'move', a=True)
+                                        cmds.move(0, 0, 0, 'move', ws=True, a=True)
+                                        break
+                        else:
+                            continue
+                        break
+                    else:
+                        continue
+                    break
+                
+                flag = 0
+
+        def apply(self):
+            global flag
+
+            if flag == 0:
+                cmds.select('mino*')
+                obj_list = cmds.ls(sl=True, type='transform')
+                cmds.select('exist*')
+                tag_list = cmds.ls(sl=True, type='transform')
+                for tag in tag_list:
+                    tag_pos = cmds.pointPosition(tag, w=True)
+                    if tag_pos[1] == 0:
+                        cmds.setAttr(tag + '.exist', 1)
+                    else:
+                        for obj in obj_list:
+                            obj_pos = cmds.pointPosition(obj + '.rotatePivot', w=True)
+                            if abs(obj_pos[1] - tag_pos[1]) < 0.5:
+                                if abs(obj_pos[0] - tag_pos[0]) < 0.5:
+                                    cmds.setAttr(tag + '.exist',1)
+                                    break
+                        else:
+                            cmds.setAttr(tag + '.exist', 0)
+                i = 1
+                while i < 21:
+                    cmds.select('line' + str(i), hi=True)
+                    cmds.select('line' + str(i), d=True)
+                    line_list = cmds.ls(sl=True, type='transform')
+                    for line in line_list:
+                        if line[0] in 'exist':
+                            if cmds.getAttr(line + '.exist') == 0:
+                                break
+                    else:
+                        for line in line_list:
+                            if line[0] in 'mino':
+                                cmds.delete(line)
+                            elif line[0] in 'exist':
+                                cmds.setAttr(line + '.exist', 0)
+                        for j in range(i+1,21):
+                            cmds.select('line' + str(j), hi=True)
+                            cmds.select('line' + str(j), d=True)
+                            down_list = cmds.ls(sl=True, type='transform')
+                            for list in down_list:
+                                if list[0] in 'mino':
+                                    cmds.move(-1, list, y=True, r=True)
+                                    cmds.parent(list, 'line'+str(j-1))
+                        cmds.select('mino*')
+                        obj_list = cmds.ls(sl=True, type='transform')
+                        cmds.select('exist*')
+                        tag_list = cmds.ls(sl=True, type='transform')
+                        for tag in tag_list:
+                            cmds.setAttr(tag + '.exist', 0)
+                            tag_pos = cmds.pointPosition(tag, w=True)
+                            if tag_pos[1] == 0:
+                                cmds.setAttr(tag + '.exist', 1)
+                            else:
+                                for obj in obj_list:
+                                    obj_pos = cmds.pointPosition(obj + '.rotatePivot', w=True)
+                                    if abs(obj_pos[1] - tag_pos[1]) < 0.9:
+                                        if abs(obj_pos[0] - tag_pos[0]) < 0.9:
+                                            cmds.setAttr(tag + '.exist',1)
+                                            break
+                        print('aaaa')
+                        i -= 1
+                    i += 1
+                cmds.select('mino*')
+                obj_list = cmds.ls(sl=True, type='transform')
+                cmds.select('exist*')
+                tag_list = cmds.ls(sl=True, type='transform')
+                for tag in tag_list:
+                    cmds.setAttr(tag + '.exist', 0)
+                    tag_pos = cmds.pointPosition(tag, w=True)
+                    if tag_pos[1] == 0:
+                        cmds.setAttr(tag + '.exist', 1)
+                    else:
+                        for obj in obj_list:
+                            obj_pos = cmds.pointPosition(obj + '.rotatePivot', w=True)
+                            if abs(obj_pos[1] - tag_pos[1]) < 0.9:
+                                if abs(obj_pos[0] - tag_pos[0]) < 0.9:
+                                    cmds.setAttr(tag + '.exist',1)
+                                    break
+                tet_mino.make_mino()
+                flag = 1
+
+    def main():
+        app = QtWidgets.QApplication.instance()
+        ui = GUI()
+        ui.show()
+
+    if __name__ == '__main__':
+        main()
+                </code></pre>
+                </details>
+            </div>
+
+            <div class="tools">
+                <a id="tools"></a>
+                <h2 class="title">MAYA便利ツール</h2>
+                <img src="tools.JPG">
+                <h3>使用ツール</h3>
+                <ul>
+                    <li>Python</li>
+                    <li>QtDesigner</li>
+                </ul>
+                <h3>POINT</h3>
+                <p>自分がモデリングしていて使用頻度が高かったりあると便利そうと思ったものを1つのツールにまとめた。
+                    QtDesignerはグラフィカルにUIを作成できるので今後の拡張も容易。
+                </p>
+                <h3>機能</h3>
+                <ol type="1">
+                    <li>縦横高さ測定</li>
+                    <li>何倍スケール</li>
+                    <li>名前選択（未実装）</li>
+                    <li>0,0,0に移動</li>
+                    <li>ピボットポイントを0,0,0に移動</li>
+                    <li>ピボットポイントをオブジェクトの中心に移動</li>
+                </ol>
+                <details><summary>ソースコード</summary>
+                <pre><code>
+    import sys
+    import os
+    import maya.cmds as cmds
+
+    from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+
+    from PySide2 import QtCore, QtGui, QtWidgets
+    from PySide2.QtUiTools import QUiLoader
+
+    UI_DIR = "***"
+
+    class GUI(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
+        def __init__(self, parent=None):
+            super(GUI, self).__init__(parent)
+            
+            #ui load
+            loader = QUiLoader()
+            uiFilePath = os.path.join(UI_DIR, 'untitled.ui')
+            self.UI = loader.load(uiFilePath)
+            self.setCentralWidget(self.UI)
+
+            #title
+            self.setWindowTitle(u'Tools')
+
+            #widget
+            self.UI.Piv_origin.clicked.connect(self.pivot_origin)
+            self.UI.Piv_center.clicked.connect(self.pivot_center)
+            self.UI.Pos_origin.clicked.connect(self.goto_origin)
+            self.UI.Size_check.clicked.connect(self.size_check)
+            self.UI.Scale_obj.clicked.connect(self.scale_obj)
+
+        def pivot_origin(self):
+            target = cmds.ls(sl=True, fl=True)
+            for obj in target:
+                cmds.select(obj)
+                cmds.xform(piv=(0,0,0), ws=True)
+        
+        def pivot_center(self):
+            target = cmds.ls(sl=True, fl=True)
+            for obj in target:
+                cmds.select(obj)
+                cmds.xform(cp=True)
+
+        def goto_origin(self):
+            target = cmds.ls(sl=True, fl=True)
+            for obj in target:
+                name = obj + '.translate'
+                cmds.setAttr(name, 0,0,0)
+
+        def size_check(self):
+            size = cmds.xform(q=True, bbi=True)
+            x = abs(size[3] - size[0])
+            y = abs(size[4] - size[1])
+            z = abs(size[5] - size[2])
+            self.UI.Sizex_txt.setText(str(x))
+            self.UI.Sizey_txt.setText(str(y))
+            self.UI.Sizez_txt.setText(str(z))
+
+        def scale_obj(self):
+            target = cmds.ls(sl=True, fl=True)
+            new_scale = self.UI.Scale_box.value()
+
+            print(type(new_scale))
+            for obj in target:
+                obj_sx = cmds.getAttr(obj + '.scaleX')
+                obj_sy = cmds.getAttr(obj + '.scaleY')
+                obj_sz = cmds.getAttr(obj + '.scaleZ')
+
+                sx = obj_sx * new_scale
+                sy = obj_sy * new_scale
+                sz = obj_sz * new_scale
+
+                cmds.setAttr(obj + '.scaleX', sx)
+                cmds.setAttr(obj + '.scaleY', sy)
+                cmds.setAttr(obj + '.scaleZ', sz)
+
+
+    def main():
+        global Tool_UI
+        
+        try:
+            Tool_UI.close()
+        except Exception:
+            pass
+
+        app = QtWidgets.QApplication.instance()
+        Tool_UI = GUI()
+        Tool_UI.show()
+
+    if __name__ == '__main__':
+        main()
+                </code></pre>
+                </details>
             </div>
 
             <div class="gear_mel">
@@ -136,7 +467,7 @@
                 </ul>
                 <h3>POINT</h3>
                 <p>モジュールと歯数を入れ歯車を作成するMELスクリプトを作成した。入力した値が後から分かるようにリネームするようにした。</p>
-                <h3>ソースコード</h3>
+                <details><summary>ソースコード</summary>
                 <pre><code>
 proc create_gear(float $m,int $z)
 {
@@ -184,6 +515,7 @@ proc create_gear(float $m,int $z)
 	DeleteHistory;
 }
                 </code></pre>
+                </details>
             </div>
 
             <div class="diamond">
@@ -206,7 +538,7 @@ proc create_gear(float $m,int $z)
                     <p>表面と視線との角度によって透明度を変え、元の色にRGBを追加することで宝石のような質感を表現しようとした。</p>
                     <p>反射率も変え屈折も表現すれば良くなる気がした。</p>
                 </div>
-                <h3>ソースコード</h3>
+                <details><summary>shaderソースコード</summary>
                 <pre><code>
     Shader "Custom/shader"
     {
@@ -300,6 +632,7 @@ proc create_gear(float $m,int $z)
         FallBack "Diffuse"
     }
                 </code></pre>
+                </details>
             </div>
 
             <div class="gun">
