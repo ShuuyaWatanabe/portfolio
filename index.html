@@ -68,9 +68,9 @@
                         地面の頂点座標を取得し、毎フレームCVをx-z平面上で一番近い地面の頂点と同じy座標に移動させることで接地させている。</p>
                     <p>車体の傾きは、左右と前後の車輪の上昇量から計算している。</p>
                 </div>
-                    <h4>ソース</h4>
-                    <details>
-                    <summary>履帯制御MEL</summary>
+                    <h3>ソースコード</h3>
+                    
+                    <h4>履帯制御MEL</h4>
                         <pre><code>
     global proc L_Track()
     {
@@ -105,9 +105,7 @@
     }
     L_Track();
                         </code></pre>
-                    </details>
-                    <details>
-                    <summary>車体制御Expression</summary>
+                    <h4>車体制御Expression</h4>
                         <pre><code>
     //車体の左右の傾き制御
     //左右の車輪の上昇量から計算
@@ -126,7 +124,6 @@
     nurbsCircle1.rotateX = -body.rotateX;
     nurbsCircle2.rotateX = -body.rotateX;
                         </code></pre>
-                    </details>
             </div>
             
             <div class="tetris">
@@ -149,7 +146,7 @@
                     <li>各列のロケーターのアトリビュートを見て全てTrueならキューブを削除しアトリビュートをFalseに</li>
                     <li>ループ</li>
                 </ol>
-                <details><summary>メインソース</summary>
+                <h3>ソースコード</h3>
                 <pre><code>
     import sys
     import os
@@ -335,7 +332,6 @@
     if __name__ == '__main__':
         main()
                 </code></pre>
-                </details>
             </div>
 
             <div class="tools">
@@ -360,7 +356,7 @@
                     <li>ピボットポイントを0,0,0に移動</li>
                     <li>ピボットポイントをオブジェクトの中心に移動</li>
                 </ol>
-                <details><summary>ソースコード</summary>
+                <h3>ソースコード</h3>
                 <pre><code>
     import sys
     import os
@@ -467,7 +463,7 @@
                 </ul>
                 <h3>POINT</h3>
                 <p>モジュールと歯数を入れ歯車を作成するMELスクリプトを作成した。入力した値が後から分かるようにリネームするようにした。</p>
-                <details><summary>ソースコード</summary>
+                <h3>ソースコード</h3>
                 <pre><code>
 proc create_gear(float $m,int $z)
 {
@@ -515,7 +511,6 @@ proc create_gear(float $m,int $z)
 	DeleteHistory;
 }
                 </code></pre>
-                </details>
             </div>
 
             <div class="diamond">
@@ -538,7 +533,7 @@ proc create_gear(float $m,int $z)
                     <p>表面と視線との角度によって透明度を変え、元の色にRGBを追加することで宝石のような質感を表現しようとした。</p>
                     <p>反射率も変え屈折も表現すれば良くなる気がした。</p>
                 </div>
-                <details><summary>shaderソースコード</summary>
+                <h3>shaderソースコード</h3>
                 <pre><code>
     Shader "Custom/shader"
     {
@@ -632,7 +627,6 @@ proc create_gear(float $m,int $z)
         FallBack "Diffuse"
     }
                 </code></pre>
-                </details>
             </div>
 
             <div class="gun">
@@ -643,7 +637,6 @@ proc create_gear(float $m,int $z)
                 <h3>制作時間：約20時間</h3>
                 <h3>ポリゴン数：9000三角ポリゴン</h3>
                 
-
                 <div class="under_reset"></div>
 
                 <h3>使用ツール</h3>
@@ -655,8 +648,6 @@ proc create_gear(float $m,int $z)
                 <p>FN社、Five-seveNをモデリングした。他の拳銃よりも曲線が多く、きれいになるよう気を付けた。
                     公式ページに360度画像があったのでよく観察しながら作業をした。</p>
             </div>
-
-            
         </div>
     </body>
 </html>
