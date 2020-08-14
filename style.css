@@ -34,14 +34,23 @@ pre{
     clear: both;
 }
 
+.prof p{
+    line-height:50%;
+}
+
+.tools img{
+    width: 75%;
+    height: 75%;
+}
+
 .gear_mel img{
     width: 50%;
-    height: 50%
+    height: 50%;
 }
 
 
 .gun img{
     float: left;
     width: 50%;
-    height: 50%
+    height: 50%;
 }
