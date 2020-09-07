@@ -38,6 +38,11 @@ pre{
     line-height:50%;
 }
 
+.polytool img{
+    width: 50%;
+    height: 50%;
+}
+
 .tools img{
     width: 50%;
     height: 50%;
