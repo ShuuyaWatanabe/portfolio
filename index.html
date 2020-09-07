@@ -8,7 +8,7 @@
 
     <body>
         <div class="prof">
-            <h1>プロフィール(2020/08現在)</h1>
+            <h1>プロフィール(2020/09現在)</h1>
             <img src="face.png">
             <h2><a href="#portfolio">go to portfolio</a></h2>
             <h2>名前：渡邉秀哉</h2>
@@ -28,11 +28,11 @@
             <p>2020年02月：ビジネス能力検定ジョブパス3級　合格</p>
             
             <h2>使用ツール・言語(ツール：使用歴　習熟度)</h2>
-            <p>C言語：1年　メモリ動的確保やファイル操作、数値計算程度</p>
+            <p>C言語：1年　メモリ動的確保やファイル操作、数値計算</p>
             <p>C#：半年　Unityスクリプト</p>
-            <p>Python：3か月　MAYAのツール作成</p>
+            <p>Python：3か月　MAYAのツール作成、競技プログラミング(AtCoder)</p>
             <p>mel：半年　スクリプト作成</p>
-            <p>HTML：1か月　このページを作るために急いで学習中</p>
+            <p>HTML：1か月　静的ページ作成</p>
             <br>
             <p>MAYA：1年半　モデリングからレンダリングまでの一連作業</p>
         </div>
@@ -43,32 +43,99 @@
             <h2>contents</h2>
 
             <ul>
-                <li><a href="#tank">戦車(animation MAYA)</a></li>
-                <li><a href="#tetris">テトリス in MAYA(MAYA-python, Qtdesigner)</a></li>
+                <li><a href="#polytool">多角形ポリゴン色変更ツール(MAYA, Python)</a></li>
+                <li><a href="#tank">戦車・履帯制御(mel, expression)</a></li>
+                <li><a href="#tetris">テトリス in MAYA(Python, Qtdesigner)</a></li>
                 <li><a href="#tools">MAYA便利ツール(Python, QtDesigner)</a>
-                <li><a href="#gear_mel">歯車生成MEL(MEL)</a></li>
+                <li><a href="#gear_mel">歯車生成mel(mel)</a></li>
                 <li><a href="#diamond">宝石風シェーダー＋パーティクル(shader&particle unity)</a></li>
                 <li><a href="#gun">銃モデリング(MAYA, Substance Painter)</a></li>
                 
             </ul>
 
+            <div class="polytool">
+                <a id="polytool"></a>
+                <h2 class="title">多角形ポリゴン色変更ツール(MAYA)</h2>
+                <img src="polycolor.JPG">
+                <h3>使用ツール</h3>
+                <ul>
+                    <li>MAYA</li>
+                    <li>Python</li>
+                </ul>
+                <h3>目的</h3>
+                <p>自分がモデリングをしているときに、どこに多角形ポリゴンがあるかすぐに見つからないことがあったので、三角・四角・多角形ポリゴンが一目で見分けられるようにした。</p>
+                <h3>処理</h3>
+                <ol type="1">
+                    <li>(初回のみ)各色のマテリアル作成</li>
+                    <li>選択したオブジェクトをコンストレイント選択</li>
+                    <li>各フェースにマテリアル割り当て</li>
+                </ol>
+                <h3>ソースコード</h3>
+                <pre><code>
+    import maya.cmds as cmds
+
+    obj = cmds.ls(sl=True,fl=True)
+
+    try:
+        cmds.select('TriPoly')
+    except Exception:
+        cmds.shadingNode('lambert', n='TriPoly', asShader=True)
+        cmds.setAttr('TriPoly.color',1,1,0,type="double3")
+        cmds.select(cl=True)
+        cmds.sets(r=True,nss=True,n='TriPolySG')
+        cmds.connectAttr('TriPoly.outColor','TriPolySG.surfaceShader',f=True)
+
+    try:
+        cmds.select('SqrPoly')
+    except Exception:
+        cmds.shadingNode('lambert', n='SqrPoly', asShader=True)
+        cmds.setAttr('SqrPoly.color',0,0,1,type="double3")
+        cmds.select(cl=True)
+        cmds.sets(r=True,nss=True,n='SqrPolySG')
+        cmds.connectAttr('SqrPoly.outColor','SqrPolySG.surfaceShader',f=True)
+
+    try:
+        cmds.select('MultiPoly')
+    except Exception:
+        hoge = cmds.shadingNode('lambert', n='MultiPoly', asShader=True)
+        cmds.setAttr('MultiPoly.color',1,0,0,type="double3")
+        cmds.select(cl=True)
+        cmds.sets(r=True,nss=True,n='MultiPolySG')
+        cmds.connectAttr('MultiPoly.outColor','MultiPolySG.surfaceShader',f=True)
+
+    cmds.select(obj)
+    cmds.polySelectConstraint(mode=3,size=1,type=0x0008)
+    cmds.selectMode(co=True)
+    cmds.sets(e=True,fe='TriPolySG')
+
+    cmds.select(obj)
+    cmds.polySelectConstraint(mode=3,size=2,type=0x0008)
+    cmds.selectMode(co=True)
+    cmds.sets(e=True,fe='SqrPolySG')
+
+    cmds.select(obj)
+    cmds.polySelectConstraint(mode=3,size=3,type=0x0008)
+    cmds.selectMode(co=True)
+    cmds.sets(e=True,fe='MultiPolySG')
+
+    cmds.polySelectConstraint(mode=0)
+                </code></pre>
+            
+            </div>
+
             <div class="tank">
                 <a id="tank"></a>
-                <h2 class="title">戦車</h2>
+                <h2 class="title">戦車・履帯制御</h2>
                 <iframe width="560" height="315" src="https://www.youtube.com/embed/E94hw2WlYBc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                <div class="tool">
-                    <h3>使用ツール</h3>
-                    <ul>
-                        <li>MAYA2019(MEL,Expression,MASH)</li>
-                    </ul>
-                </div>
-                <div class="point">
-                    <h3>POINT</h3>
+                <h3>使用ツール</h3>
+                <ul>
+                    <li>MAYA2019(MEL,Expression,MASH)</li>
+                </ul>
+                <h3>POINT</h3>
                     <p>履帯をカーブで成形しているので、CVを動かすことで地面に添わせた。
                         地面の頂点座標を取得し、毎フレームCVをx-z平面上で一番近い地面の頂点と同じy座標に移動させることで接地させている。</p>
                     <p>車体の傾きは、左右と前後の車輪の上昇量から計算している。</p>
-                </div>
-                    <h3>ソースコード</h3>
+                <h3>ソースコード</h3>
                     
                     <h4>履帯制御MEL</h4>
                         <pre><code>
@@ -351,7 +418,7 @@
                 <ol type="1">
                     <li>縦横高さ測定</li>
                     <li>何倍スケール</li>
-                    <li>名前選択（未実装）</li>
+                    <li>名前選択</li>
                     <li>0,0,0に移動</li>
                     <li>ピボットポイントを0,0,0に移動</li>
                     <li>ピボットポイントをオブジェクトの中心に移動</li>
@@ -455,7 +522,7 @@
 
             <div class="gear_mel">
                 <a id="gear_mel"></a>
-                <h2 class="title">歯車生成MEL</h2>
+                <h2 class="title">歯車生成mel</h2>
                 <img src="gear.JPG">
                 <h3>使用ツール</h3>
                 <ul>
@@ -531,7 +598,6 @@ proc create_gear(float $m,int $z)
                 <div class="point">
                     <h3>POINT</h3>
                     <p>表面と視線との角度によって透明度を変え、元の色にRGBを追加することで宝石のような質感を表現しようとした。</p>
-                    <p>反射率も変え屈折も表現すれば良くなる気がした。</p>
                 </div>
                 <h3>shaderソースコード</h3>
                 <pre><code>
